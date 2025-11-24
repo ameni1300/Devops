@@ -1,8 +1,8 @@
--Currency Converter API — DevOps Project
+ # **Currency Converter API — DevOps Project**
 
 Une API complète de conversion de devises, conçue selon les bonnes pratiques DevOps : observabilité, sécurité, automatisation et déploiement containerisé.
 
--Fonctionnalités principales
+## **Fonctionnalités principales**
 
 REST API – Conversion de devises avec taux en temps réel
 
@@ -14,28 +14,31 @@ Containerisation – Compatible Docker & Kubernetes
 
 CI/CD – Tests, scans, build et déploiements automatisés
 
-📁 Structure du projet
+## Structure du projet
+```
 devops-project-api/
 ├── src/
 │   └── app.py               # Application Flask
-├── k8s/                     # Manifests Kubernetes
+├── k8s/                     # Kubernetes manifests
 │   ├── deployment.yaml
 │   ├── service.yaml
 │   └── namespace.yaml
-├── .github/workflows/
-│   └── ci-cd.yml            # Pipeline GitHub Actions
+├── .github/
+│   └── workflows/
+│       └── ci-cd.yml        # CI/CD pipeline (GitHub Actions)
 ├── Dockerfile
 ├── requirements.txt
 ├── README.md
 └── FINAL_REPORT.md
+```
 
-🛠️ Démarrage rapide
-▶️ Exécution locale
+## Démarrage rapide
+### ▶️ Exécution locale
 pip install -r requirements.txt
 cd src
 python app.py
 
-▶️ Docker
+### ▶️ Docker
 
 Build & Run
 
@@ -48,28 +51,32 @@ Depuis Docker Hub
 docker pull ameni1300/currency-api:latest
 docker run -p 5000:5000 ameni1300/currency-api:latest
 
-📡 Endpoints de l’API
-Endpoint	Méthode	Description
-/	GET	Documentation API
-/health	GET	Health check
-/convert?from=EUR&to=USD&amount=100	GET	Conversion de devise
-/currencies	GET	Liste des devises supportées
-/metrics	GET	Métriques Prometheus
-/cache/clear	POST	Vider le cache des taux
-🧪 Exemples d’utilisation
-# Health check
+## Endpoints de l’API
+```
+Endpoint	                                  | Méthode	Description
+---------------------------------------------------------------------
+/GET	                                      | Documentation API
+/health	GET	                                  | Health check
+/convert?from=EUR&to=USD&amount=100	GET	      | Conversion de devise
+/currencies	GET	                              | Liste des devises supportées
+/metrics	GET                               | Métriques Prometheus
+/cache/clear	POST	                      | Vider le cache des taux
+```
+## Exemples d’utilisation
+### Health check
 curl http://localhost:5000/health
 
-# Convertir 100 EUR vers USD
+### Convertir 100 EUR vers USD
 curl "http://localhost:5000/convert?from=EUR&to=USD&amount=100"
 
-# Metrics
+### Metrics
 curl http://localhost:5000/metrics
 
-# Avec trace ID
+### Avec trace ID
 curl -H "X-Trace-ID: my-trace-123" http://localhost:5000/health
 
 🔧 Exemples de réponses
+```
 ✔️ Conversion réussie (JSON)
 {
   "conversion": {
@@ -82,7 +89,8 @@ curl -H "X-Trace-ID: my-trace-123" http://localhost:5000/health
   },
   "trace_id": "a1b2c3d4-5678-90ef-ghij-klmnopqrstuv"
 }
-
+```
+```
 ✔️ Health Check
 {
   "status": "healthy",
@@ -94,8 +102,8 @@ curl -H "X-Trace-ID: my-trace-123" http://localhost:5000/health
   "version": "1.0.0",
   "uptime": "Running"
 }
-
-🔐 Sécurité intégrée
+```
+## Sécurité intégrée
 
 SAST – Analyse statique via Bandit
 
@@ -105,7 +113,7 @@ Validation d’entrées – Contrôle strict des paramètres
 
 Docker sécurisé – User non-root, healthchecks, image allégée
 
-📊 Observabilité
+## Observabilité
 Métriques Prometheus
 
 http_requests_total
@@ -132,7 +140,7 @@ Génération automatique d’ID de trace
 
 Support du header X-Trace-ID
 
-🔄 Pipeline CI/CD
+## Pipeline CI/CD
 
 Le pipeline GitHub Actions inclut :
 
@@ -148,13 +156,13 @@ Validation des manifests Kubernetes
 
 Push sur Docker Hub
 
-☸️ Déploiement Kubernetes
+## Déploiement Kubernetes
 kubectl apply -f k8s/
 
-🐳 Docker Compose
+## Docker Compose
 docker-compose up
 
-📈 Monitoring Prometheus/Grafana
+## Monitoring Prometheus/Grafana
 
 Métriques recommandées :
 
@@ -166,9 +174,11 @@ Taille du cache
 
 Volume de conversions
 
-🧱 Architecture
+## Architecture
+```
 User → Flask API → External Exchange API
    ↓          ↓        ↓
 Response   Logging    Cache
    ↓          
 Prometheus Metrics → Docker → Kubernetes Cluster
+```
