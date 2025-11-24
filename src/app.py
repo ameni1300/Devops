@@ -4,6 +4,7 @@ import logging
 import uuid
 import requests
 from decimal import Decimal, ROUND_HALF_UP
+from prometheus_client import generate_latest, Counter, Histogram, Gauge
 
 app = Flask(__name__)
 
@@ -14,7 +15,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Métriques
+# Métriques Prometheus
+REQUEST_COUNT = Counter('http_requests_total', 'Total HTTP requests', ['method', 'endpoint', 'status'])
+REQUEST_DURATION = Histogram('http_request_duration_seconds', 'HTTP request duration', ['endpoint'])
+CONVERSION_COUNT = Counter('currency_conversions_total', 'Total currency conversions')
+CACHE_SIZE = Gauge('exchange_cache_size', 'Current exchange rate cache size')
+ACTIVE_REQUESTS = Gauge('http_requests_active', 'Active HTTP requests')
+
+# Métriques legacy (pour compatibilité)
 request_count = 0
 conversions_count = 0
 exchange_cache = {}
@@ -35,16 +43,25 @@ def structured_log(level, message, **extra):
 def before_request():
     request.start_time = time.time()
     request.trace_id = request.headers.get('X-Trace-ID', str(uuid.uuid4()))
+    ACTIVE_REQUESTS.inc()
     structured_log("INFO", "Request started", 
                    method=request.method, path=request.path, ip=request.remote_addr)
 
 @app.after_request
 def after_request(response):
+    ACTIVE_REQUESTS.dec()
+    
     if hasattr(request, 'start_time'):
         response_time = time.time() - request.start_time
+        # Métriques Prometheus
+        REQUEST_COUNT.labels(method=request.method, endpoint=request.path, status=response.status_code).inc()
+        REQUEST_DURATION.labels(endpoint=request.path).observe(response_time)
+        
         structured_log("INFO", "Request completed", 
                       method=request.method, path=request.path, 
-                      status_code=response.status_code, response_time=round(response_time, 3))
+                      status_code=response.status_code, 
+                      response_time_ms=round(response_time * 1000, 2))
+    
     response.headers['X-Trace-ID'] = getattr(request, 'trace_id', 'none')
     return response
 
@@ -74,6 +91,9 @@ def get_exchange_rate(from_currency, to_currency):
             'timestamp': current_time
         }
         
+        # Mettre à jour la métrique de cache
+        CACHE_SIZE.set(len(exchange_cache))
+        
         structured_log("INFO", "Rate fetched from API", 
                       from_currency=from_currency, to_currency=to_currency, rate=float(rate))
         return rate
@@ -95,15 +115,26 @@ def home():
             "currencies": "/currencies",
             "metrics": "/metrics",
             "health": "/health"
+        },
+        "observability": {
+            "metrics": "Prometheus format at /metrics",
+            "tracing": "X-Trace-ID header support",
+            "logging": "Structured JSON logs"
         }
     })
 
 @app.route('/health')
 def health():
+    cache_status = "healthy" if len(exchange_cache) > 0 else "empty"
     return jsonify({
         "status": "healthy",
         "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ'),
-        "cache_size": len(exchange_cache)
+        "cache": {
+            "size": len(exchange_cache),
+            "status": cache_status
+        },
+        "version": "1.0.0",
+        "uptime": "Running"
     })
 
 @app.route('/currencies')
@@ -146,10 +177,12 @@ def convert():
     
     converted_amount = (amount * rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
     conversions_count += 1
+    CONVERSION_COUNT.inc()
     
     structured_log("INFO", "Conversion successful", 
                   from_currency=from_currency, to_currency=to_currency, 
-                  amount=float(amount), converted_amount=float(converted_amount))
+                  amount=float(amount), converted_amount=float(converted_amount),
+                  rate=float(rate))
     
     return jsonify({
         "conversion": {
@@ -159,50 +192,57 @@ def convert():
             "converted_amount": float(converted_amount),
             "rate": float(rate),
             "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ')
-        }
+        },
+        "trace_id": getattr(request, 'trace_id', 'none')
     })
 
 @app.route('/metrics')
 def metrics():
-    cache_size = len(exchange_cache)
-    cache_hit_ratio = 0.5  # Simplifié pour l'exemple
+    # Mettre à jour les métriques de cache
+    CACHE_SIZE.set(len(exchange_cache))
     
-    metrics_data = f"""
-# HELP http_requests_total Total number of HTTP requests.
-# TYPE http_requests_total counter
-http_requests_total {request_count}
-
-# HELP currency_conversions_total Total number of currency conversions.
-# TYPE currency_conversions_total counter
-currency_conversions_total {conversions_count}
-
-# HELP cache_size_current Current size of exchange rate cache.
-# TYPE cache_size_current gauge
-cache_size_current {cache_size}
-
-# HELP cache_hit_ratio Cache hit ratio.
-# TYPE cache_hit_ratio gauge
-cache_hit_ratio {cache_hit_ratio}
-"""
-    return metrics_data, 200, {'Content-Type': 'text/plain'}
+    # Générer les métriques Prometheus
+    return generate_latest(), 200, {'Content-Type': 'text/plain'}
 
 @app.route('/cache/clear', methods=['POST'])
 def clear_cache():
     global exchange_cache
     exchange_cache.clear()
+    CACHE_SIZE.set(0)
     structured_log("INFO", "Cache cleared")
-    return jsonify({"message": "Cache vidé avec succès"})
+    return jsonify({
+        "message": "Cache vidé avec succès",
+        "cache_size": 0
+    })
+
+@app.route('/trace')
+def trace_test():
+    """Endpoint pour tester le tracing"""
+    return jsonify({
+        "trace_id": getattr(request, 'trace_id', 'none'),
+        "message": "Trace ID test endpoint",
+        "headers": dict(request.headers)
+    })
 
 @app.errorhandler(404)
 def not_found(error):
-    return jsonify({"error": "Endpoint non trouvé"}), 404
+    return jsonify({
+        "error": "Endpoint non trouvé",
+        "path": request.path,
+        "trace_id": getattr(request, 'trace_id', 'none')
+    }), 404
 
 @app.errorhandler(500)
 def internal_error(error):
-    structured_log("ERROR", "Internal server error", error=str(error))
-    return jsonify({"error": "Erreur interne du serveur"}), 500
+    structured_log("ERROR", "Internal server error", 
+                  error=str(error), path=request.path, trace_id=getattr(request, 'trace_id', 'none'))
+    return jsonify({
+        "error": "Erreur interne du serveur",
+        "trace_id": getattr(request, 'trace_id', 'none')
+    }), 500
 
 if __name__ == '__main__':
     print("🚀 Currency Converter API starting on http://0.0.0.0:5000")
-    print("📊 Endpoints disponibles: /convert, /currencies, /metrics, /health")
+    print("📊 Endpoints disponibles: /convert, /currencies, /metrics, /health, /trace")
+    print("🔍 Observability: Prometheus metrics, structured logging, request tracing")
     app.run(host='0.0.0.0', port=5000, debug=False)
