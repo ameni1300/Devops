@@ -6,7 +6,6 @@ spec:
   selector:
     app: currency-api
   ports:
-  - name: http
-    port: 80
+  - port: 80
     targetPort: 5000
-  type: LoadBalancer  # Pour accéder depuis l'extérieur
+  type: LoadBalancer
