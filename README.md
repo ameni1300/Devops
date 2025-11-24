@@ -1,76 +1,76 @@
-# Currency Converter API - DevOps Project
+-Currency Converter API — DevOps Project
 
-A complete DevOps-ready currency conversion API with full observability, security, and containerization.
+Une API complète de conversion de devises, conçue selon les bonnes pratiques DevOps : observabilité, sécurité, automatisation et déploiement containerisé.
 
-## 🚀 Features
+-Fonctionnalités principales
 
-- **REST API** - Currency conversion with real-time exchange rates
-- **Observability** - Prometheus metrics, structured logging, request tracing
-- **Security** - SAST/DAST scanning, input validation
-- **Containerized** - Docker & Kubernetes ready
-- **CI/CD** - Automated testing, security scans, deployment
+REST API – Conversion de devises avec taux en temps réel
 
-## 📁 Project Structure
+Observabilité – Métriques Prometheus, logs structurés, tracing des requêtes
+
+Sécurité – SAST, DAST, validation d’entrée, image Docker sécurisée
+
+Containerisation – Compatible Docker & Kubernetes
+
+CI/CD – Tests, scans, build et déploiements automatisés
+
+📁 Structure du projet
 devops-project-api/
 ├── src/
-│ └── app.py # Flask API application
-├── k8s/ # Kubernetes manifests
-│ ├── deployment.yaml
-│ ├── service.yaml
-│ └── namespace.yaml
+│   └── app.py               # Application Flask
+├── k8s/                     # Manifests Kubernetes
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── namespace.yaml
 ├── .github/workflows/
-│ └── ci-cd.yml # CI/CD pipeline
+│   └── ci-cd.yml            # Pipeline GitHub Actions
 ├── Dockerfile
 ├── requirements.txt
 ├── README.md
 └── FINAL_REPORT.md
 
-text
-
-## 🛠️ Quick Start
-
-### Local Development
-```bash
-# Install dependencies
+🛠️ Démarrage rapide
+▶️ Exécution locale
 pip install -r requirements.txt
-
-# Run the API
 cd src
 python app.py
-Docker
-bash
-# Build and run
+
+▶️ Docker
+
+Build & Run
+
 docker build -t currency-api .
 docker run -p 5000:5000 currency-api
-Docker Hub
-bash
-# Pull from Docker Hub
+
+
+Depuis Docker Hub
+
 docker pull ameni1300/currency-api:latest
 docker run -p 5000:5000 ameni1300/currency-api:latest
-📡 API Endpoints
-Endpoint	Method	Description
-GET /	GET	API documentation
-GET /health	GET	Health check
-GET /convert?from=EUR&to=USD&amount=100	GET	Currency conversion
-GET /currencies	GET	List supported currencies
-GET /metrics	GET	Prometheus metrics
-POST /cache/clear	POST	Clear exchange rate cache
-Example Usage
-bash
+
+📡 Endpoints de l’API
+Endpoint	Méthode	Description
+/	GET	Documentation API
+/health	GET	Health check
+/convert?from=EUR&to=USD&amount=100	GET	Conversion de devise
+/currencies	GET	Liste des devises supportées
+/metrics	GET	Métriques Prometheus
+/cache/clear	POST	Vider le cache des taux
+🧪 Exemples d’utilisation
 # Health check
 curl http://localhost:5000/health
 
-# Convert 100 EUR to USD
+# Convertir 100 EUR vers USD
 curl "http://localhost:5000/convert?from=EUR&to=USD&amount=100"
 
-# Get metrics
+# Metrics
 curl http://localhost:5000/metrics
 
-# With tracing
+# Avec trace ID
 curl -H "X-Trace-ID: my-trace-123" http://localhost:5000/health
-🔧 API Response Examples
-Successful Conversion
-json
+
+🔧 Exemples de réponses
+✔️ Conversion réussie (JSON)
 {
   "conversion": {
     "from": "EUR",
@@ -82,8 +82,8 @@ json
   },
   "trace_id": "a1b2c3d4-5678-90ef-ghij-klmnopqrstuv"
 }
-Health Check
-json
+
+✔️ Health Check
 {
   "status": "healthy",
   "timestamp": "2024-01-15T10:30:00Z",
@@ -94,90 +94,81 @@ json
   "version": "1.0.0",
   "uptime": "Running"
 }
-🛡️ Security Features
-SAST - Static code analysis with Bandit
 
-DAST - Dynamic API testing in CI/CD
+🔐 Sécurité intégrée
 
-Input validation - All parameters are validated
+SAST – Analyse statique via Bandit
 
-Docker security - Non-root user, health checks
+DAST – Tests dynamiques automatisés dans CI/CD
 
-📊 Observability
-Metrics (Prometheus format)
-http_requests_total - Request counters with labels
+Validation d’entrées – Contrôle strict des paramètres
 
-http_request_duration_seconds - Response time histogram
+Docker sécurisé – User non-root, healthchecks, image allégée
 
-currency_conversions_total - Conversion counter
+📊 Observabilité
+Métriques Prometheus
 
-exchange_cache_size - Cache size gauge
+http_requests_total
+
+http_request_duration_seconds
+
+currency_conversions_total
+
+exchange_cache_size
 
 Logging
-Structured JSON logs with:
 
-Trace IDs for request correlation
+Logs JSON structurés
 
-Response times in milliseconds
+TraceIDs pour corrélation des requêtes
 
-Error tracking with context
+Temps de réponse
+
+Détails d’erreurs contextualisés
 
 Tracing
-Automatic trace ID generation
 
-Support for external trace IDs via X-Trace-ID header
+Génération automatique d’ID de trace
 
-🔄 CI/CD Pipeline
-The GitHub Actions pipeline includes:
+Support du header X-Trace-ID
 
-Test - Application startup validation
+🔄 Pipeline CI/CD
 
-Security SAST - Bandit static analysis
+Le pipeline GitHub Actions inclut :
 
-Build Docker - Container image creation
+Tests automatisés
 
-Security DAST - API runtime testing
+Analyse SAST (Bandit)
 
-Kubernetes Validation - Manifest syntax checking
+Build Docker
 
-Docker Hub Push - Automatic image publishing
+Analyse DAST
 
-☸️ Kubernetes Deployment
-bash
+Validation des manifests Kubernetes
+
+Push sur Docker Hub
+
+☸️ Déploiement Kubernetes
 kubectl apply -f k8s/
-🐳 Docker
-Build
-bash
-docker build -t currency-api .
-Run
-bash
-docker run -p 5000:5000 currency-api
-Docker Compose
-bash
+
+🐳 Docker Compose
 docker-compose up
-📈 Monitoring
-Access metrics at /metrics endpoint for Prometheus scraping.
 
-Example dashboard metrics:
+📈 Monitoring Prometheus/Grafana
 
-Request rate and error rate
+Métriques recommandées :
 
-Response time percentiles
+Taux de requêtes / erreurs
 
-Cache hit ratio and size
+Temps de réponse (p50/p90/p99)
 
-Conversion volume
+Taille du cache
 
-🏗️ Architecture
-text
-User Request → Flask API → External Exchange API
-     ↓              ↓           ↓
-   Response     Structured   Rate Cache
-                 Logging
-     ↓              ↓
- Prometheus    Docker Container
-  Metrics      Kubernetes Cluster
+Volume de conversions
 
-## 🎯 FÉLICITATIONS !
-
-**Avec ce README, vous complétez les 20% de documentation et votre projet est MAINTENANT 100% TERMINÉ !** 🎉
+🧱 Architecture
+User → Flask API → External Exchange API
+   ↓          ↓        ↓
+Response   Logging    Cache
+   ↓          
+Prometheus Metrics → Docker → Kubernetes Cluster
