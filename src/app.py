@@ -8,21 +8,18 @@ from prometheus_client import generate_latest, Counter, Histogram, Gauge
 
 app = Flask(__name__)
 
-# Configuration du logging simple et robuste
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Métriques Prometheus
 REQUEST_COUNT = Counter('http_requests_total', 'Total HTTP requests', ['method', 'endpoint', 'status'])
 REQUEST_DURATION = Histogram('http_request_duration_seconds', 'HTTP request duration', ['endpoint'])
 CONVERSION_COUNT = Counter('currency_conversions_total', 'Total currency conversions')
 CACHE_SIZE = Gauge('exchange_cache_size', 'Current exchange rate cache size')
 ACTIVE_REQUESTS = Gauge('http_requests_active', 'Active HTTP requests')
 
-# Métriques legacy (pour compatibilité)
 request_count = 0
 conversions_count = 0
 exchange_cache = {}
