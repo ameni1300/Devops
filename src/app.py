@@ -66,7 +66,6 @@ def get_exchange_rate(from_currency, to_currency):
     cache_key = f"{from_currency}_{to_currency}"
     current_time = time.time()
     
-    # Vérifier le cache (valide 1 heure)
     if cache_key in exchange_cache:
         cached_data = exchange_cache[cache_key]
         if current_time - cached_data['timestamp'] < 3600:
